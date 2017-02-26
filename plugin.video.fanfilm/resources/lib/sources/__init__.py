@@ -41,7 +41,6 @@ from resources.lib.resolvers import realdebrid
 from resources.lib.resolvers import premiumize
 
 import youtubedl
-
 from resources.lib import resolvers
 
 

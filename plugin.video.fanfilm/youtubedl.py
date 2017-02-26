@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from concurrent.futures import ThreadPoolExecutor
 from resources.lib.libraries import control
 import xbmc,xbmcgui
 import threading
@@ -34,17 +33,17 @@ class PriorityQueue:
 
 def queueItems(items):
     q = PriorityQueue()
-    pool = ThreadPoolExecutor(max_workers=3)
     items.reverse()
 
     def submitItem(items):
-        q.put(pool.submit(resolveUrl, items.pop()['url']), len(items))
+        t = threading.Thread(target=resolve, args=(q, items.pop()['url'], len(items),))
+        t.start()
 
     submitItem(items)
 
     while len(items) > 0:
         try:
-            url = q.get().result()
+            url = q.get()
             control.log('[YOUTUBE.DL] SUCCESS: %s' % url)
         except UserWarning as e:
             control.log('[YOUTUBE.DL] ERROR: %s' % e)
@@ -52,8 +51,8 @@ def queueItems(items):
         yield url
         submitItem(items)
 
-    pool.shutdown()
-
+def resolve(q, url, priority):
+    q.put(resolveUrl(url), priority)
 
 def resolveUrl(url):
     info = getVideoInfo(url.encode('utf-8','ignore'),quality=3,resolve_redirects=True)
